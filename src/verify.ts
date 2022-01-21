@@ -10,7 +10,7 @@ export const isInteger: sanitizer = function(val) {
   if (Number.isInteger(val)) return val;
   throw new Error(`${JSON.stringify(val)} is not integer`);
 };
-export function isTrueOnCall(f: (val: any) => boolean): sanitizer {
+export function is(f: (val: any) => boolean): sanitizer {
   return function(val: any) {
     if (f(val)) return val;
     throw new Error(

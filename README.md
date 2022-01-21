@@ -8,6 +8,8 @@ Package is created for singuar purpose, to remove extra properties from a json o
 - verify if property matches given conditions
 - create custom sanitizer functions:
 
+## [Github](https://github.com/Panth977/sanitize-json)
+
 ## Usage
 
 offten there is a sicutation where you get a dirty json data:
@@ -34,7 +36,7 @@ const profileSanitizer = isInterfaceAs({
   age: checkIfIt(isNumber, isInteger, isIt('>=', 18)),
   username: checkIfIt(
     isString,
-    isTrueOnCall(username => username.length > 3 && username.length < 30)
+    is(username => username.length > 3 && username.length < 30)
   ),
 });
 ```
@@ -62,7 +64,7 @@ you can also have logic opraters "and" or "or":
 
 ```ts
 const someSanitizer = isInterfaceAs({
-  a: applyOr(isNumber, isBoolean),
+  a: either(isNumber, isBoolean),
 });
 
 console.log(sanitizeJson(someSanitizer, { a: true }));
@@ -89,7 +91,7 @@ const a = isInterfaceAs({ p1: isString });
 const b = isInterfaceAs({ a: a });
 ```
 
-### applyOr
+### either
 
 ```ts
 type a = string;
@@ -98,7 +100,7 @@ type c = a | b;
 
 const a = isString;
 const b = isInterfaceAs({});
-const c = applyOr(a, b);
+const c = either(a, b);
 ```
 
 ### switchOn
@@ -136,12 +138,11 @@ const editEmailAdderssSanitizer = isInterfaceAs({
   uid: isString,
   email: isString,
 });
-const reqSanitizer = switchOn(
-  req => req.editAction,
-  { when: 'phoneNum', then: editPhoneNumSanitizer },
-  { when: 'profilePic', then: editProfilePicSanitizer },
-  { when: 'emailAdderss', then: editEmailAdderssSanitizer }
-);
+const reqSanitizer = switchOn(req => req.editAction, {
+  phoneNum: editPhoneNumSanitizer,
+  profilePic: editProfilePicSanitizer,
+  emailAdderss: editEmailAdderssSanitizer,
+});
 ```
 
 ### combine
@@ -206,20 +207,20 @@ const profileSanitizer = isInterfaceAs({
 })
 ```
 
-### isTrueOnCall
+### is
 
 ```ts
 interface profile {
   ...
-  username: string; // string must pass function isValidUsername
+  username: string; // string must pass function validUsername
 }
 
-function isValidUsername(username: string): boolean {
+function validUsername(username: string): boolean {
   ...
 }
 const profileSanitizer = isInterfaceAs({
   ...,
-  username: checkIfIt(isString, isTrueOnCall(isValidUsername))
+  username: checkIfIt(isString, is(validUsername))
 })
 ```
 

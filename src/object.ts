@@ -56,7 +56,7 @@ export function isArrayAs(fn: sanitizer[]) {
 }
 
 export function isInterfaceAs(obj: obj<sanitizer>) {
-  return function(val: any) {
+  function objSanitizer(val: any) {
     if (typeof val !== 'object' || val === null)
       throw new Error(`
         obj val \n
@@ -72,5 +72,7 @@ export function isInterfaceAs(obj: obj<sanitizer>) {
       }
     }
     return newObj;
-  };
+  }
+  objSanitizer.prototype.obj = obj;
+  return objSanitizer;
 }

@@ -5,3 +5,7 @@ export interface sanitizer {
 export interface obj<T = any> {
   [key: string]: T;
 }
+
+export interface interfaceSanitizer {
+  (val: obj): obj;
+}
