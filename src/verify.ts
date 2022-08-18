@@ -69,3 +69,6 @@ export function checkIfIt(...fn: sanitizer[]): sanitizer {
     return val;
   };
 }
+export function isE164PhoneNumber(phoneNumber: string) {
+  return /^\+[1-9]\d{10,14}$/.test(phoneNumber);
+}
