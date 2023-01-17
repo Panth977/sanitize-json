@@ -1,7 +1,7 @@
-import { obj, sanitizer } from './types';
+import { sanitizer } from './types';
 
-export function isListOf(f: sanitizer) {
-  return function(val: any) {
+export function isListOf<T>(f: sanitizer<T>): sanitizer<T[]> {
+  return function(val: T[]) {
     if (!Array.isArray(val))
       throw new Error(`  
         obj val \n
@@ -9,17 +9,18 @@ export function isListOf(f: sanitizer) {
         is invalid value,\n
         value passed in isListOf is not an array
       `);
-    let e;
-    const newlist: any[] = [];
-    for (e of val) {
-      newlist.push(f(e));
-    }
+    let e: T;
+    const newlist: T[] = [];
+    for (e of val) newlist.push(f(e));
     return newlist;
   };
 }
 
-export function isMapOf(f: sanitizer) {
-  return function(val: any) {
+export function isMapOf<T>(
+  f: sanitizer<T>,
+  ignoreOnFail = true
+): sanitizer<{ [key: string]: T }> {
+  return function(val: { [key: string]: T }) {
     if (typeof val !== 'object' || val === null)
       throw new Error(`
         obj val \n
@@ -27,10 +28,18 @@ export function isMapOf(f: sanitizer) {
         is invalid value,\n
         value passed in isMapOf is not an object or is null
       `);
-    let k;
-    const obj: { [key: string]: any } = {};
-    for (k in val) {
-      if (Object.prototype.hasOwnProperty.call(val, k)) {
+    let k: string;
+    const obj: { [key: string]: T } = {};
+    if (ignoreOnFail) {
+      for (k in val) {
+        if (!Object.prototype.hasOwnProperty.call(val, k)) continue;
+        try {
+          obj[k] = f(val[k]);
+        } catch {}
+      }
+    } else {
+      for (k in val) {
+        if (!Object.prototype.hasOwnProperty.call(val, k)) continue;
         obj[k] = f(val[k]);
       }
     }
@@ -38,38 +47,39 @@ export function isMapOf(f: sanitizer) {
   };
 }
 
-export function isArrayAs(fn: sanitizer[]) {
-  return function(val: any) {
-    if (!Array.isArray(val))
-      throw new Error(`  
-        obj val \n
-        = ${JSON.stringify(val)} \n
-        is invalid value,\n
-        value passed in isArrayAs is not an array
-      `);
-    const newlist: any[] = [];
-    for (let i = 0; i < fn.length; i++) {
-      newlist.push(fn[i](val[i]));
-    }
-    return newlist;
-  };
-}
+// export function isArrayAs(fn: sanitizer[]) {
+//   return function(val: any) {
+//     if (!Array.isArray(val))
+//       throw new Error(`
+//         obj val \n
+//         = ${JSON.stringify(val)} \n
+//         is invalid value,\n
+//         value passed in isArrayAs is not an array
+//       `);
+//     const newlist: any[] = [];
+//     for (let i = 0; i < fn.length; i++) {
+//       newlist.push(fn[i](val[i]));
+//     }
+//     return newlist;
+//   };
+// }
 
-export function isInterfaceAs(obj: obj<sanitizer>) {
-  function objSanitizer(val: any) {
+export function isStructOf<T extends {}>(
+  obj: { [key in keyof T]: sanitizer<T[key]> }
+): sanitizer<T> {
+  function objSanitizer(val: { [key in keyof T]: T[key] }) {
     if (typeof val !== 'object' || val === null)
       throw new Error(`
         obj val \n
         = ${JSON.stringify(val)} \n
         is invalid value,\n
-        value passed in isInterfaceAs is not an object or is null
+        value passed in isStructOf is not an object or is null
       `);
-    let k;
-    const newObj: { [key: string]: any } = {};
+    const newObj: { [key in keyof T]: T[key] } = {} as any;
+    let k: keyof T;
     for (k in obj) {
-      if (Object.prototype.hasOwnProperty.call(obj, k)) {
-        newObj[k] = obj[k](val[k]);
-      }
+      if (!Object.prototype.hasOwnProperty.call(obj, k)) continue;
+      newObj[k] = obj[k](val[k]);
     }
     return newObj;
   }

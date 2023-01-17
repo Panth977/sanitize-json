@@ -1,9 +1,9 @@
-import { isInterfaceAs } from '.';
-import { obj, sanitizer } from './types';
+import { isStructOf } from './object';
+import { sanitizer } from './types';
 
-export function either(...fn: sanitizer[]) {
+export function either<T>(...fn: sanitizer<T>[]): sanitizer<T> {
   return function(val: any) {
-    let f;
+    let f: sanitizer<T>;
     for (f of fn) {
       try {
         return f(val);
@@ -18,27 +18,9 @@ export function either(...fn: sanitizer[]) {
   };
 }
 
-export function switchOn(
-  v: (val: any) => string,
-  when: obj<sanitizer>,
-  defaultCase?: sanitizer
-) {
-  return function(val: any) {
-    let a = when[v(val)];
-    if (a) return a(val);
-    if (defaultCase) return defaultCase(val);
-    throw new Error(`
-    obj val \n
-    = ${JSON.stringify(val)} \n
-    is invalid value,\n
-    target value don't match to any of the "when" value in switchOn
-    `);
-  };
-}
-
-export function combine(...fn: sanitizer[]) {
-  let f;
-  const obj: obj<sanitizer> = {};
+export function combine<T extends {}>(...fn: sanitizer<T>[]): sanitizer<T> {
+  let f: sanitizer<T>;
+  const obj: { [key: string]: sanitizer<T> } = {};
   for (f of fn) {
     f = f.prototype.obj;
     if (f) Object.assign(obj, f);
@@ -49,5 +31,5 @@ export function combine(...fn: sanitizer[]) {
     only interfaces sanitizers can be combined
     `);
   }
-  return isInterfaceAs(obj);
+  return isStructOf(obj as any);
 }

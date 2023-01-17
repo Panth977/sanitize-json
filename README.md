@@ -30,12 +30,12 @@ here isAdmin property should not be.
 then create a sanitizer💕:
 
 ```ts
-const profileSanitizer = isInterfaceAs({
-  name: isString,
-  email: checkIfIt(isString, isEmail),
-  age: checkIfIt(isNumber, isInteger, isIt('>=', 18)),
+const profileSanitizer = isStructOf({
+  name: hasValOf.string,
+  email: checkIfIt(hasValOf.string, isEmail),
+  age: checkIfIt(hasValOf.number, isInteger, shouldBe('>=', 18)),
   username: checkIfIt(
-    isString,
+    hasValOf.string,
     is(username => username.length > 3 && username.length < 30)
   ),
 });
@@ -52,10 +52,10 @@ console.log(cleanJsonObj.val);
 you can create basic nested interface sanitizers:
 
 ```ts
-const someSanitizer = isInterfaceAs({
-  a: isInterfaceAs({
-    b: isNumber,
-    a: isBoolean,
+const someSanitizer = isStructOf({
+  a: isStructOf({
+    b: hasValOf.number,
+    a: hasValOf.boolean,
   }),
 });
 ```
@@ -63,8 +63,8 @@ const someSanitizer = isInterfaceAs({
 you can also have logic opraters "and" or "or":
 
 ```ts
-const someSanitizer = isInterfaceAs({
-  a: either(isNumber, isBoolean),
+const someSanitizer = isStructOf({
+  a: either(hasValOf.number, hasValOf.boolean),
 });
 
 console.log(sanitizeJson(someSanitizer, { a: true }));
@@ -75,9 +75,20 @@ console.log(sanitizeJson(someSanitizer, { a: 'sa' }));
 // { err: true, val: #Error }
 ```
 
-## APIs:
+## Consept (create your own sanitizor)
 
-### isInterfaceAs
+```ts
+interface data {}
+
+function dataSanitizor(val: data): data {
+  if (data_in_val_is_valid) return create_copy_of(val);
+  throw 'reason, what was wrong with ${val}';
+}
+```
+
+## APIs: (prebuilt sanitizor)
+
+### isStructOf
 
 ```ts
 interface a {
@@ -87,8 +98,8 @@ interface b {
   a: a;
 }
 
-const a = isInterfaceAs({ p1: isString });
-const b = isInterfaceAs({ a: a });
+const a = isStructOf({ p1: hasValOf.string });
+const b = isStructOf({ a: a });
 ```
 
 ### either
@@ -98,51 +109,9 @@ type a = string;
 interface b {}
 type c = a | b;
 
-const a = isString;
-const b = isInterfaceAs({});
+const a = hasValOf.string;
+const b = isStructOf({});
 const c = either(a, b);
-```
-
-### switchOn
-
-```ts
-interface editPhoneNum {
-  editAction: 'phoneNum';
-  uid: string;
-  phoneNum: number;
-}
-interface editProfilePic {
-  editAction: 'profilePic';
-  uid: string;
-  url: string;
-}
-interface editEmailAdderss {
-  editAction: 'emailAdderss';
-  uid: string;
-  email: string;
-}
-type req = editPhoneNum | editProfilePic | editEmailAdderss;
-
-const editPhoneNumSanitizer = isInterfaceAs({
-  editAction: isString,
-  uid: isString,
-  phoneNum: isNumber,
-});
-const editProfilePicSanitizer = isInterfaceAs({
-  editAction: isString,
-  uid: isString,
-  url: isString,
-});
-const editEmailAdderssSanitizer = isInterfaceAs({
-  editAction: isString,
-  uid: isString,
-  email: isString,
-});
-const reqSanitizer = switchOn(req => req.editAction, {
-  phoneNum: editPhoneNumSanitizer,
-  profilePic: editProfilePicSanitizer,
-  emailAdderss: editEmailAdderssSanitizer,
-});
 ```
 
 ### combine
@@ -153,8 +122,8 @@ interface b {}
 
 type c = a & b;
 
-const a = isInterfaceAs({});
-const b = isInterfaceAs({});
+const a = isStructOf({});
+const b = isStructOf({});
 
 const c = combine(a, b);
 ```
@@ -165,22 +134,8 @@ const c = combine(a, b);
 interface a {}
 type b = a[]; // List<a>;
 //
-const a = isInterfaceAs({});
+const a = isStructOf({});
 const b = isListOf(a);
-```
-
-### isArrayAs
-
-```ts
-interface a {}
-interface b {}
-interface c {}
-type d = [a, b, c];
-
-const a = isInterfaceAs({});
-const b = isInterfaceAs({});
-const c = isInterfaceAs({});
-const d = isArrayAs([a, b, c]);
 ```
 
 ### isMapOf
@@ -189,7 +144,7 @@ const d = isArrayAs([a, b, c]);
 interface a {}
 type b = { [key: string]: a };
 
-const a = isInterfaceAs({});
+const a = isStructOf({});
 const b = isMapOf(a);
 ```
 
@@ -201,9 +156,9 @@ interface profile {
   age: number; // number must be int, and (18 or 18+)
 }
 
-const profileSanitizer = isInterfaceAs({
+const profileSanitizer = isStructOf({
   ...,
-  age: checkIfIt(isNumber, isInteger, isIt(">=", 18))
+  age: checkIfIt(hasValOf.number, isInteger, shouldBe(">=", 18))
 })
 ```
 
@@ -218,9 +173,9 @@ interface profile {
 function validUsername(username: string): boolean {
   ...
 }
-const profileSanitizer = isInterfaceAs({
+const profileSanitizer = isStructOf({
   ...,
-  username: checkIfIt(isString, is(validUsername))
+  username: checkIfIt(hasValOf.string, is(validUsername))
 })
 ```
 

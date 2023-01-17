@@ -1,11 +1,3 @@
-export interface sanitizer {
-  (val: any): any;
-}
-
-export interface obj<T = any> {
-  [key: string]: T;
-}
-
-export interface interfaceSanitizer {
-  (val: obj): obj;
+export interface sanitizer<T> {
+  (val: T): T;
 }
