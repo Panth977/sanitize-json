@@ -47,14 +47,8 @@ export function isMapOf<T>(
   };
 }
 
-type ArrayUnion<A, B> = A extends Array<any>
-  ? B extends Array<any>
-    ? [...A, ...B]
-    : never
-  : never;
-
-type MapSanitizor<T> = T extends [infer P1, ...(infer Rest)]
-  ? ArrayUnion<[sanitizer<P1>], MapSanitizor<Rest>>
+type MapSanitizor<T extends any[]> = T extends [infer P, ...(infer R)]
+  ? [sanitizer<P>, ...MapSanitizor<R>]
   : [];
 
 export function isArrayAs<T extends any[]>(fn: MapSanitizor<T>): sanitizer<T> {
