@@ -102,6 +102,18 @@ const a = isStructOf({ p1: hasValOf.string });
 const b = isStructOf({ a: a });
 ```
 
+### isStructOf
+
+```ts
+type address = [string, string, string | undefined];
+
+const address = isArrayOf([
+  hasValOf.string,
+  hasValOf.string,
+  isUndefinedOr(hasValOf.string),
+]);
+```
+
 ### either
 
 ```ts

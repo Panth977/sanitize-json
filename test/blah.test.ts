@@ -8,6 +8,7 @@ import {
   isUndefinedOr,
   matches,
   sanitizeJson,
+  isArrayAs,
 } from '../src';
 
 type admin_status = { role: 'admin' };
@@ -23,6 +24,8 @@ type expected_request = {
   stauts: admin_status | manager_status | casher_status;
   friends: { [uid: string]: { name: string; rank: number } };
   age: number | undefined;
+
+  version: [number, number, number, string];
 };
 
 const expected_request_sanitizor = isStructOf<expected_request>({
@@ -60,6 +63,12 @@ const expected_request_sanitizor = isStructOf<expected_request>({
     })
   ),
   age: isUndefinedOr(hasValOf.number),
+  version: isArrayAs([
+    hasValOf.number,
+    hasValOf.number,
+    hasValOf.number,
+    hasValOf.string,
+  ]),
 });
 
 const result_1 = sanitizeJson(expected_request_sanitizor, {});
@@ -77,6 +86,7 @@ const result_2 = sanitizeJson(expected_request_sanitizor, {
     aidnia6d68nd: { name: 'Harshil', rank: 9 },
     '6ds5cvs6d4': { name: 'Vyom', rank: 11 },
   },
+  version: [1, 0, 0, '+2'],
 });
 expect(result_2.err).toEqual(false);
 if (!result_2.err) {
@@ -90,5 +100,6 @@ if (!result_2.err) {
     stauts: { role: 'admin' },
     friends: { aidnia6d68nd: { name: 'Harshil', rank: 9 } },
     age: undefined,
+    version: [1, 0, 0, '+2'],
   });
 }

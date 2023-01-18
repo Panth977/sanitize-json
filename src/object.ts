@@ -47,22 +47,26 @@ export function isMapOf<T>(
   };
 }
 
-// export function isArrayAs(fn: sanitizer[]) {
-//   return function(val: any) {
-//     if (!Array.isArray(val))
-//       throw new Error(`
-//         obj val \n
-//         = ${JSON.stringify(val)} \n
-//         is invalid value,\n
-//         value passed in isArrayAs is not an array
-//       `);
-//     const newlist: any[] = [];
-//     for (let i = 0; i < fn.length; i++) {
-//       newlist.push(fn[i](val[i]));
-//     }
-//     return newlist;
-//   };
-// }
+type MapSanitizor<T> = T extends [infer P1, ...(infer Rest)]
+  ? [sanitizer<P1>, ...MapSanitizor<Rest>]
+  : [];
+
+export function isArrayAs<T extends any[]>(fn: MapSanitizor<T>): sanitizer<T> {
+  return function(val) {
+    if (!Array.isArray(val))
+      throw new Error(`
+        obj val \n
+        = ${JSON.stringify(val)} \n
+        is invalid value,\n
+        value passed in isArrayAs is not an array
+      `);
+    const newlist: T = [] as any;
+    for (let i = 0; i < fn.length; i++) {
+      newlist.push((fn[i] as any)(val[i]));
+    }
+    return newlist;
+  };
+}
 
 export function isStructOf<T extends {}>(
   obj: { [key in keyof T]: sanitizer<T[key]> }
